@@ -1,0 +1,233 @@
+CREATE TABLE addon (
+    customer_id VARCHAR(20),
+    InternetService VARCHAR(20),
+    Phone VARCHAR(3),
+    Multiple VARCHAR(3),
+    OnlineSecurity VARCHAR(3),
+    OnlineBackup VARCHAR(3),
+    DeviceProtection VARCHAR(3),
+    TechSupport VARCHAR(3),
+    StreamingTV VARCHAR(3),
+    StreamingMovies VARCHAR(3)
+);
+
+ALTER TABLE customer 
+ADD COLUMN Source VARCHAR;
+UPDATE customer 
+SET Source = 'WGU';
+
+-- Update 'Prefer not to answer' to 'NonBinary'
+UPDATE customer
+SET Gender = 'NonBinary'
+WHERE Gender = 'Prefer not to answer';
+
+-- Update 'children' column to 'Yes' or 'No' 
+ALTER TABLE customer
+ALTER COLUMN Children TYPE VARCHAR(3);
+UPDATE customer
+SET Children = CASE
+    WHEN Children::INTEGER > 0 THEN 'Yes'
+    ELSE 'No'
+END;
+
+UPDATE customer
+SET Marital = 'No'
+WHERE Marital = 'Widowed';
+
+UPDATE customer
+SET Marital = 'No'
+WHERE Marital = 'Divorced';
+
+UPDATE customer
+SET Marital = 'No'
+WHERE Marital = 'Never Married';
+
+UPDATE customer
+SET Marital = 'Yes'
+WHERE Marital = 'Married';
+
+UPDATE customer
+SET Marital = 'Yes'
+WHERE Marital = 'Separated';
+
+CREATE TABLE tempibm (
+    CustomerID VARCHAR(20) PRIMARY KEY,
+    City VARCHAR(100),
+    State CHAR(2),
+    Zip_Code VARCHAR(10),
+    Age INTEGER,
+    Gender VARCHAR(10),
+    Senior_Citizen VARCHAR(3),  -- 'Yes' or 'No'
+    Marital VARCHAR(3),         -- 'Yes' or 'No'
+    Dependents VARCHAR(3),      -- 'Yes' or 'No'
+    Tenure_Months INTEGER,
+    Phone VARCHAR(3),           -- 'Yes' or 'No'
+    Multiple_Lines VARCHAR(3),  -- 'Yes' or 'No'
+    Internet_Service VARCHAR(20),
+    Online_Security VARCHAR(3), -- 'Yes' or 'No'
+    Online_Backup VARCHAR(3),   -- 'Yes' or 'No'
+    Device_Protection VARCHAR(3), -- 'Yes' or 'No'
+    Tech_Support VARCHAR(3),    -- 'Yes' or 'No'
+    Streaming_TV VARCHAR(3),    -- 'Yes' or 'No'
+    Streaming_Movies VARCHAR(3), -- 'Yes' or 'No'
+    Contract VARCHAR(20),
+    Paperless_Billing VARCHAR(3), -- 'Yes' or 'No'
+    Payment_Method VARCHAR(30),
+    Monthly_Charges NUMERIC(5, 2), -- For charges like 53.85
+    Churn VARCHAR(3)             -- 'Yes' or 'No'
+);
+
+
+UPDATE tempibm
+SET Zip_Code = LPAD(Zip_Code, 5, '0');
+
+UPDATE tempibm
+SET internet_service = 'Fiber Optic'
+WHERE internet_service = 'Fiber optic';
+
+
+CREATE TABLE ibm AS
+SELECT
+    customerid AS CustomerID,
+    churn AS Churn,
+    city AS City,
+    state AS State,
+    zip_code  AS ZipCode,
+    age AS Age,
+    gender AS Gender,
+    dependents AS Children,
+    marital AS Marital,
+    phone AS Phone,
+    multiple_lines AS MultipleLines,
+    internet_service AS InternetService,
+    online_security AS OnlineSecurity,
+    online_backup AS OnlineBackup,
+    device_protection AS DeviceProtection,
+    tech_support AS TechSupport,
+    streaming_tv AS StreamingTV,
+    streaming_movies AS StreamingMovies,
+    monthly_charges AS MonthlyCharges
+FROM public.tempibm;
+
+-- Add a source column to the IBM dataset
+ALTER TABLE ibm ADD COLUMN source VARCHAR;
+UPDATE ibm SET source = 'IBM';
+
+
+--For Tableau
+
+SELECT   
+"customer"."customer_id" AS "Customer ID",  
+"customer"."age" AS "Age",  
+"customer"."children" AS "Children",  
+"customer"."churn" AS "Churn (WGU)",  
+"customer"."lat" AS "lat",  
+"customer"."lng" AS "lng",  
+"customer"."gender" AS "Gender",  
+"customer"."marital" AS "Marital (wgu)",  
+"customer"."source" AS "source (wgu)",  
+"addon"."deviceprotection" AS "Device Protection",  
+"addon"."internetservice" AS "Internet Service",  
+"customer"."monthly_charge" AS "Monthly Charges",  
+"addon"."multiple" AS "Multiple Lines",  
+"addon"."onlinebackup" AS "Online Backup",  
+"addon"."onlinesecurity" AS "Online Security",  
+"addon"."phone" AS "Phone",  
+"addon"."streamingmovies" AS "Streaming Movies",  
+"addon"."streamingtv" AS "Streaming TV",  
+"addon"."techsupport" AS "Tech Support",  
+"location"."state" AS "State",  
+"location"."city" AS "City",  
+"location"."zip" AS "Zipcode"
+FROM "public"."customer" "customer"
+INNER JOIN "public"."addon" "addon" 
+ON("customer"."customer_id" = "addon"."customer_id")
+INNER JOIN "public"."location" "location" 
+ON("customer"."location_id" = "location"."location_id")
+
+
+
+IF [Select WGU Service] = 'Device Protection' AND [Device Protection] = 'Yes' THEN "Selected"
+ELSEIF [Select WGU Service] = 'Online Backup' AND [Online Backup] = 'Yes' THEN "Selected"
+ELSEIF [Select WGU Service] = 'Online Security' AND [Online Security] = 'Yes' THEN "Selected"
+ELSEIF [Select WGU Service] = 'Streaming Movies' AND [Streaming Movies] = 'Yes' THEN "Selected"
+ELSEIF [Select WGU Service] = 'Streaming TV' AND [Streaming TV] = 'Yes' THEN "Selected"
+ELSEIF [Select WGU Service] = 'Tech Support' AND [Tech Support] = 'Yes' THEN "Selected"
+ELSEIF [Select WGU Service] = 'Multiple Lines' AND [Multiple Lines] = 'Yes' THEN "Selected"
+ELSEIF [Select WGU Service] = 'Phone' AND [Phone] = 'Yes' THEN "Selected"
+ELSE "Not Selected"
+END
+
+
+IF [Select IBM Service] = 'Deviceprotection' AND [Deviceprotection] = 'Yes' THEN "Selected"
+ELSEIF [Select IBM Service] = 'Onlinebackup' AND [Onlinebackup] = 'Yes' THEN "Selected"
+ELSEIF [Select IBM Service] = 'Onlinesecurity' AND [Onlinesecurity] = 'Yes' THEN "Selected"
+ELSEIF [Select IBM Service] = 'Streamingmovies' AND [Streamingmovies] = 'Yes' THEN "Selected"
+ELSEIF [Select IBM Service] = 'Streamingtv' AND [Streamingtv] = 'Yes' THEN "Selected"
+ELSEIF [Select IBM Service] = 'Techsupport' AND [Techsupport] = 'Yes' THEN "Selected"
+ELSEIF [Select IBM Service] = 'Multiplelines' AND [Multiplelines] = 'Yes' THEN "Selected"
+ELSEIF [Select IBM Service] = 'Phone' AND [Phone] = 'Yes' THEN "Selected"
+ELSE "Not Selected"END
+
+
+Monthly Header
+IF SUM ([Monthlycharges]) > 1
+THEN “IBM Avg. Monthly Charge”
+ELSE NULL
+END
+
+Total Customers
+(COUNT([Churn (WGU)]))+(COUNT([Churn]))
+
+All Active Customers
+SUM(IF [Churn (WGU)] = "No" THEN 1 ELSE 0 END) +
+SUM(IF [Churn] = "No" THEN 1 ELSE 0 END)
+
+All Churn Customers
+SUM(IF [Churn (WGU)] = "Yes" THEN 1 ELSE 0 END) +
+SUM(IF [Churn] = "Yes" THEN 1 ELSE 0 END)
+
+WGU Active Customers
+SUM(IF [Churn (WGU)] = "No" THEN 1 ELSE 0 END)
+
+WGU Churn Customers
+SUM(IF [Churn (WGU)] = "Yes" THEN 1 ELSE 0 END)
+
+IBM Active Customers
+SUM(IF [Churn] = "No" THEN 1 ELSE 0 END)
+
+IBM Churn Customers
+SUM(IF [Churn] = "Yes" THEN 1 ELSE 0 END)
+
+
+IBM Single Customers
+SUM(IF [Marital] = "No" THEN 1 ELSE 0 END)
+
+IBM Married Customers
+SUM(IF [Marital] = "Yes" THEN 1 ELSE 0 END)
+
+IBM Marital Header
+IF [Marital] = "Yes" THEN "Married"
+ELSE "Not Married"
+END
+
+IBM Churn Header
+IF [Churn] = "Yes" THEN "Not Active"
+ELSE "Active"
+END
+
+WGU Churn Header
+IF [Churn (WGU)] = "Yes" THEN "Not Active"
+ELSE "Active"
+END
+
+WGU Marital Header
+IF [Marital (wgu)] = "Yes" THEN "Married"
+ELSE "Not Married"
+END
+
+WGU Married Customers
+SUM(IF [Marital] = "Yes" THEN 1 ELSE 0 END)
+
+WGU Single Customers
+SUM(IF [Marital] = "No" THEN 1 ELSE 0 END)
